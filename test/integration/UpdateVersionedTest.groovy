@@ -15,8 +15,8 @@ class UpdateVersionedTest extends GroovyTestCase {
         final def entity = new Child(name: 'Test').save()
         final def version = entity.version
         Parent.executeUpdate(
-            'UPDATE VERSIONED Parent p SET p.name = :val WHERE p.id = :id',
-            [id: entity.id, val: 'Updated value']
+            'UPDATE VERSIONED Parent p SET p.name = :val WHERE p.id IN (:ids)',
+            [ids: [entity.id], val: 'Updated value']
         )
         assertEquals(version + 1, entity.refresh().version)
     }
@@ -29,9 +29,9 @@ class UpdateVersionedTest extends GroovyTestCase {
         final def version = entity.version
         Parent.withSession { final Session session ->
             final def query = session.createSQLQuery(
-                'UPDATE parent p SET p.name = :val, p.version = p.version + 1 WHERE p.id = :id'
+                'UPDATE parent p SET p.name = :val, p.version = p.version + 1 WHERE p.id IN (:ids)'
             )
-            query.setLong('id', entity.id)
+            query.setLong('ids', entity.id)
             query.setString('val', 'Updated value')
             query.executeUpdate()
         }
